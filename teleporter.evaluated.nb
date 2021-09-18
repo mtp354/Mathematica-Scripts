@@ -1,0 +1,1810 @@
+(***********************************************************************
+
+                    Mathematica-Compatible Notebook
+
+This notebook can be used on any computer system with Mathematica 3.0,
+MathReader 3.0, or any compatible application. The data for the notebook 
+starts with the line of stars above.
+
+To get the notebook into a Mathematica-compatible application, do one of 
+the following:
+
+* Save the data starting with the line of stars above into a file
+  with a name ending in .nb, then open the file inside the application;
+
+* Copy the data starting with the line of stars above to the
+  clipboard, then use the Paste menu command inside the application.
+
+Data for notebooks contains only printable 7-bit ASCII and can be
+sent directly in email or through ftp in text mode.  Newlines can be
+CR, LF or CRLF (Unix, Macintosh or MS-DOS style).
+
+NOTE: If you modify the data for this notebook not in a Mathematica-
+compatible application, you must delete the line below containing the 
+word CacheID, otherwise Mathematica-compatible applications may try to 
+use invalid cache data.
+
+For more information on notebooks and Mathematica-compatible 
+applications, contact Wolfram Research:
+  web: http://www.wolfram.com
+  email: info@wolfram.com
+  phone: +1-217-398-0700 (U.S.)
+
+Notebook reader applications are available free of charge from 
+Wolfram Research.
+***********************************************************************)
+
+(*CacheID: 232*)
+
+
+(*NotebookFileLineBreakTest
+NotebookFileLineBreakTest*)
+(*NotebookOptionsPosition[     58236,       1609]*)
+(*NotebookOutlinePosition[     58872,       1632]*)
+(*  CellTagsIndexPosition[     58828,       1628]*)
+(*WindowFrame->Normal*)
+
+
+
+Notebook[{
+Cell["\<\
+ This file was created automatically by vma2nb from an .vma file. \
+It should be suitable to be loaded by Mathematica's GUI front end but you \
+probably don't want to edit it; edit the corresponding .vma source file \
+instead! \
+\>", "Text",
+  Evaluatable->False],
+
+Cell["\<\
+
+
+  teleporter.vma   (C) 1999, 2000  Timo Felbinger
+
+  A demonstration of the quantum teleportation protocol for qubits.
+  (C. H. Bennett et. al. (1995))
+ \
+\>", "Text",
+  Evaluatable->False],
+
+Cell["  SetOptions[ $Output, PageWidth -> 72 ];", "Input"],
+
+Cell[CellGroupData[{
+
+Cell["  << qmatrix.m", "Input"],
+
+Cell[BoxData[
+    \("  package qmatrix, version 2.2.0  \n  (C) Timo Felbinger \
+(timo@felbinger.net), 1999, 2000, 2001  \n  last modified:  \
+20010430.091422utc  by: timof@uranos  \n  evaluate qmatrix`help to get help \
+on this package  "\)], "Print"]
+}, Open  ]],
+
+Cell["\<\
+
+ Define the actors: Alice and Bob: \
+\>", "Text",
+  Evaluatable->False],
+
+Cell["\<\
+
+ Alice has two qubits, named source and qa: \
+\>", "Text",
+  Evaluatable->False],
+
+Cell[CellGroupData[{
+
+Cell["  alice = { source, qa }", "Input"],
+
+Cell[BoxData[
+    \({source, qa}\)], "Output"]
+}, Open  ]],
+
+Cell["\<\
+
+ Bob only gets a single qubit: \
+\>", "Text",
+  Evaluatable->False],
+
+Cell[CellGroupData[{
+
+Cell["  bob = { qb }", "Input"],
+
+Cell[BoxData[
+    \({qb}\)], "Output"]
+}, Open  ]],
+
+Cell["\<\
+
+ The physical system comprises Alice and Bob: \
+\>", "Text",
+  Evaluatable->False],
+
+Cell[CellGroupData[{
+
+Cell["  setSystem[ { alice, bob } ]", "Input"],
+
+Cell[BoxData[
+    \({{source, qa}, {qb}}\)], "Output"]
+}, Open  ]],
+
+Cell["\<\
+
+ All modes are indeed qubits (fermionic modes are 2-dimensional!): \
+\>", 
+  "Text",
+  Evaluatable->False],
+
+Cell[CellGroupData[{
+
+Cell["  setModeType[ #1, fermionic ] & /@ Flatten[ system ]", "Input"],
+
+Cell[BoxData[
+    \({fermionic, fermionic, fermionic}\)], "Output"]
+}, Open  ]],
+
+Cell["\<\
+
+ Alice and Bob share one ebit of entanglement, the resource: \
+\>", "Text",
+  Evaluatable->False],
+
+Cell[CellGroupData[{
+
+Cell["  resource = singlet[ qa, qb ]", "Input"],
+
+Cell[BoxData[
+    InterpretationBox[GridBox[{
+          {
+            TagBox[
+              RowBox[{"(", GridBox[{
+                    {"0", "0", "0", "0"},
+                    {"0", "0.5`", \(-0.5`\), "0"},
+                    {"0", \(-0.5`\), "0.5`", "0"},
+                    {"0", "0", "0", "0"}
+                    }], ")"}],
+              (MatrixForm[ #]&)]},
+          {\({ket[qa], ket[qb], bra[qa], bra[qb]}\)}
+          },
+        GridBaseline->{Baseline, {1, 1}},
+        ColumnAlignments->{Left}],
+      ColumnForm[ {
+        MatrixForm[ {{0, 0, 0, 0}, {0, 0.5, -0.5, 0}, {0, -0.5, 0.5, 0}, {0, 
+          0, 0, 0}}], {
+        ket[ qa], 
+        ket[ qb], 
+        bra[ qa], 
+        bra[ qb]}}],
+      Editable->False]], "Output"]
+}, Open  ]],
+
+Cell["\<\
+
+ Alice has another qubit, which is in some arbitrary and
+ generally mixed state (which she wants to teleport to Bob): \
+\>", "Text",
+  Evaluatable->False],
+
+Cell[CellGroupData[{
+
+Cell["  input = generalState[ source, \"a\" ]", "Input"],
+
+Cell[BoxData[
+    InterpretationBox[GridBox[{
+          {
+            TagBox[
+              RowBox[{"(", GridBox[{
+                    {"a11", "a12"},
+                    {"a21", "a22"}
+                    }], ")"}],
+              (MatrixForm[ #]&)]},
+          {\({ket[source], bra[source]}\)}
+          },
+        GridBaseline->{Baseline, {1, 1}},
+        ColumnAlignments->{Left}],
+      ColumnForm[ {
+        MatrixForm[ {{a11, a12}, {a21, a22}}], {
+        ket[ source], 
+        bra[ source]}}],
+      Editable->False]], "Output"]
+}, Open  ]],
+
+Cell["\<\
+
+ Our total initial state is the product of input and resource: \
+\>", "Text",
+  Evaluatable->False],
+
+Cell[CellGroupData[{
+
+Cell["  initial = input ** resource", "Input"],
+
+Cell[BoxData[
+    InterpretationBox[GridBox[{
+          {
+            TagBox[
+              RowBox[{"(", GridBox[{
+                    {"0", "0", "0", "0", "0", "0", "0", "0"},
+                    {"0", \(0.5`\ a11\), \(\(-0.5`\)\ a11\), "0", "0", 
+                      \(0.5`\ a12\), \(\(-0.5`\)\ a12\), "0"},
+                    {"0", \(\(-0.5`\)\ a11\), \(0.5`\ a11\), "0", "0", 
+                      \(\(-0.5`\)\ a12\), \(0.5`\ a12\), "0"},
+                    {"0", "0", "0", "0", "0", "0", "0", "0"},
+                    {"0", "0", "0", "0", "0", "0", "0", "0"},
+                    {"0", \(0.5`\ a21\), \(\(-0.5`\)\ a21\), "0", "0", 
+                      \(0.5`\ a22\), \(\(-0.5`\)\ a22\), "0"},
+                    {"0", \(\(-0.5`\)\ a21\), \(0.5`\ a21\), "0", "0", 
+                      \(\(-0.5`\)\ a22\), \(0.5`\ a22\), "0"},
+                    {"0", "0", "0", "0", "0", "0", "0", "0"}
+                    }], ")"}],
+              (MatrixForm[ #]&)]},
+          {
+            \({ket[source], ket[qa], ket[qb], bra[source], bra[qa], bra[qb]}
+              \)}
+          },
+        GridBaseline->{Baseline, {1, 1}},
+        ColumnAlignments->{Left}],
+      ColumnForm[ {
+        MatrixForm[ {{0, 0, 0, 0, 0, 0, 0, 0}, {0, 
+          Times[ 0.5, a11], 
+          Times[ -0.5, a11], 0, 0, 
+          Times[ 0.5, a12], 
+          Times[ -0.5, a12], 0}, {0, 
+          Times[ -0.5, a11], 
+          Times[ 0.5, a11], 0, 0, 
+          Times[ -0.5, a12], 
+          Times[ 0.5, a12], 0}, {0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 
+          0, 0}, {0, 
+          Times[ 0.5, a21], 
+          Times[ -0.5, a21], 0, 0, 
+          Times[ 0.5, a22], 
+          Times[ -0.5, a22], 0}, {0, 
+          Times[ -0.5, a21], 
+          Times[ 0.5, a21], 0, 0, 
+          Times[ -0.5, a22], 
+          Times[ 0.5, a22], 0}, {0, 0, 0, 0, 0, 0, 0, 0}}], {
+        ket[ source], 
+        ket[ qa], 
+        ket[ qb], 
+        bra[ source], 
+        bra[ qa], 
+        bra[ qb]}}],
+      Editable->False]], "Output"]
+}, Open  ]],
+
+Cell["\<\
+
+ The teleporation protocol starts by alice performing a bell
+ measurement. We define the observable to be measured: the
+ following operator's eigenstates are the 4 bell states, with
+ the numbers 1..4 being the eigenvalues: \
+\>", "Text",
+  Evaluatable->False],
+
+Cell["\<\
+  bellOperator = Plus @@ (
+ #1 * bellState[ source, qa, #1 ] & /@ { 1, 2, 3, 4 } 
+ ); \
+\>", "Input"],
+
+Cell["\<\
+
+ In case you are in doubt: it is indeed an observable: \
+\>", "Text",
+  Evaluatable->False],
+
+Cell[CellGroupData[{
+
+Cell["  hermitianQ[ bellOperator ]", "Input"],
+
+Cell[BoxData[
+    \(True\)], "Output"]
+}, Open  ]],
+
+Cell["\<\
+
+ Now we perform the measurement, storing the result under the
+ label \"pbell\": \
+\>", "Text",
+  Evaluatable->False],
+
+Cell["  intermediate = initial ~measure~ { bellOperator, pbell };", "Input"],
+
+Cell["\<\
+
+ To complete the teleportation, the protocol now calls for Bob
+ to perform one of the following maps (they are all unitary): \
+\>", "Text",
+  Evaluatable->False],
+
+Cell["\<\
+  (
+   map1 = map[ { identityMatrix[ qb ] } ]; 
+ ; map2 = map [ { 2 * matrix[ op[ jz, qb ] ] } ] 
+ ; map3 = map[ { notGate[ qb ] } ] 
+ ; map4 = map[ { 2 * matrix[ op[ jz, qb ] ] ** notGate[ qb ] } ] 
+ ); \
+\>", "Input"],
+
+Cell["\<\
+
+ Which of these maps Bob has to perform depends on the result of
+ Alice's Bell measurement, so Bob's map is a conditional map: \
+\>", "Text",
+  Evaluatable->False],
+
+Cell[CellGroupData[{
+
+Cell["\<\
+  bobsMap = condmap[ {
+ { map1, pbell == 1} 
+ , { map2, pbell == 2} 
+ , { map3, pbell == 3} 
+ , { map4, pbell == 4} 
+ } ] \
+\>", "Input"],
+
+Cell[BoxData[
+    InterpretationBox[GridBox[{
+          {GridBox[{
+                {\(pbell == 1\)},
+                {GridBox[{
+                      {GridBox[{
+                            {
+                              TagBox[
+                                RowBox[{"(", GridBox[{
+                                      {"1.`", "0"},
+                                      {"0", "1.`"}
+                                      }], ")"}],
+                                (MatrixForm[ #]&)]},
+                            {\({ket[qb], bra[qb]}\)}
+                            },
+                          GridBaseline->{Baseline, {1, 1}},
+                          ColumnAlignments->{Left}]}
+                      },
+                    GridBaseline->{Baseline, {1, 1}},
+                    ColumnAlignments->{Left}]},
+                {"\<\"========================\"\>"}
+                },
+              GridBaseline->{Baseline, {1, 1}},
+              ColumnAlignments->{Left}]},
+          {GridBox[{
+                {\(pbell == 2\)},
+                {GridBox[{
+                      {GridBox[{
+                            {
+                              TagBox[
+                                RowBox[{"(", GridBox[{
+                                      {\(-1.`\), "0"},
+                                      {"0", "1.`"}
+                                      }], ")"}],
+                                (MatrixForm[ #]&)]},
+                            {\({ket[qb], bra[qb]}\)}
+                            },
+                          GridBaseline->{Baseline, {1, 1}},
+                          ColumnAlignments->{Left}]}
+                      },
+                    GridBaseline->{Baseline, {1, 1}},
+                    ColumnAlignments->{Left}]},
+                {"\<\"========================\"\>"}
+                },
+              GridBaseline->{Baseline, {1, 1}},
+              ColumnAlignments->{Left}]},
+          {GridBox[{
+                {\(pbell == 3\)},
+                {GridBox[{
+                      {GridBox[{
+                            {
+                              TagBox[
+                                RowBox[{"(", GridBox[{
+                                      {"0", "1.`"},
+                                      {"1.`", "0"}
+                                      }], ")"}],
+                                (MatrixForm[ #]&)]},
+                            {\({ket[qb], bra[qb]}\)}
+                            },
+                          GridBaseline->{Baseline, {1, 1}},
+                          ColumnAlignments->{Left}]}
+                      },
+                    GridBaseline->{Baseline, {1, 1}},
+                    ColumnAlignments->{Left}]},
+                {"\<\"========================\"\>"}
+                },
+              GridBaseline->{Baseline, {1, 1}},
+              ColumnAlignments->{Left}]},
+          {GridBox[{
+                {\(pbell == 4\)},
+                {GridBox[{
+                      {GridBox[{
+                            {
+                              TagBox[
+                                RowBox[{"(", GridBox[{
+                                      {"0", \(-1.`\)},
+                                      {"1.`", "0"}
+                                      }], ")"}],
+                                (MatrixForm[ #]&)]},
+                            {\({ket[qb], bra[qb]}\)}
+                            },
+                          GridBaseline->{Baseline, {1, 1}},
+                          ColumnAlignments->{Left}]}
+                      },
+                    GridBaseline->{Baseline, {1, 1}},
+                    ColumnAlignments->{Left}]},
+                {"\<\"========================\"\>"}
+                },
+              GridBaseline->{Baseline, {1, 1}},
+              ColumnAlignments->{Left}]}
+          },
+        GridBaseline->{Baseline, {1, 1}},
+        ColumnAlignments->{Left}],
+      ColumnForm[ {
+        ColumnForm[ {
+          Equal[ pbell, 1], 
+          ColumnForm[ {
+            ColumnForm[ {
+              MatrixForm[ {{1.0, 0}, {0, 1.0}}], {
+              ket[ qb], 
+              bra[ qb]}}]}], "========================"}], 
+        ColumnForm[ {
+          Equal[ pbell, 2], 
+          ColumnForm[ {
+            ColumnForm[ {
+              MatrixForm[ {{-1.0, 0}, {0, 1.0}}], {
+              ket[ qb], 
+              bra[ qb]}}]}], "========================"}], 
+        ColumnForm[ {
+          Equal[ pbell, 3], 
+          ColumnForm[ {
+            ColumnForm[ {
+              MatrixForm[ {{0, 1.0}, {1.0, 0}}], {
+              ket[ qb], 
+              bra[ qb]}}]}], "========================"}], 
+        ColumnForm[ {
+          Equal[ pbell, 4], 
+          ColumnForm[ {
+            ColumnForm[ {
+              MatrixForm[ {{0, -1.0}, {1.0, 0}}], {
+              ket[ qb], 
+              bra[ qb]}}]}], "========================"}]}],
+      Editable->False]], "Output"]
+}, Open  ]],
+
+Cell["\<\
+
+ We just have to apply it: \
+\>", "Text",
+  Evaluatable->False],
+
+Cell["  final = bobsMap ** intermediate;", "Input"],
+
+Cell["\<\
+
+ If we look at Bob's qubit, discarding Alice's qubits as well
+ well as the classical knowledge, we find that the teleportation
+ was indeed successful, with probability p=1.0: \
+\>", "Text",
+  Evaluatable->False],
+
+Cell[CellGroupData[{
+
+Cell["  final ~contract~ Not[bob] ~forget~ pbell", "Input"],
+
+Cell[BoxData[
+    InterpretationBox[GridBox[{
+          {GridBox[{
+                {GridBox[{
+                      {
+                        TagBox[
+                          RowBox[{"(", GridBox[{
+                                {"a11", "a12"},
+                                {"a21", "a22"}
+                                }], ")"}],
+                          (MatrixForm[ #]&)]},
+                      {\({ket[qb], bra[qb]}\)}
+                      },
+                    GridBaseline->{Baseline, {1, 1}},
+                    ColumnAlignments->{Left}]},
+                {\({}\)},
+                {"\<\"p=1.\"\>"},
+                {"\<\"============\"\>"}
+                },
+              GridBaseline->{Baseline, {1, 1}},
+              ColumnAlignments->{Left}]}
+          },
+        GridBaseline->{Baseline, {1, 1}},
+        ColumnAlignments->{Left}],
+      ColumnForm[ {
+        ColumnForm[ {
+          ColumnForm[ {
+            MatrixForm[ {{a11, a12}, {a21, a22}}], {
+            ket[ qb], 
+            bra[ qb]}}], {}, "p=1.", "============"}]}],
+      Editable->False]], "Output"]
+}, Open  ]],
+
+Cell["\<\
+
+ ----------- \
+\>", 
+  "Text",
+  Evaluatable->False],
+
+Cell["\<\
+
+ We are finished now but you may find it interesting to take a
+ closer look at what was going on: \
+\>", "Text",
+  Evaluatable->False],
+
+Cell["\<\
+
+ This is the observable of the Bell measurement: \
+\>", "Text",
+  Evaluatable->False],
+
+Cell[CellGroupData[{
+
+Cell["  bellOperator", "Input"],
+
+Cell[BoxData[
+    InterpretationBox[GridBox[{
+          {
+            TagBox[
+              RowBox[{"(", GridBox[{
+                    {"3.5`", "0", "0", "0.5`"},
+                    {"0", "1.5`", "0.5`", "0"},
+                    {"0", "0.5`", "1.5`", "0"},
+                    {"0.5`", "0", "0", "3.5`"}
+                    }], ")"}],
+              (MatrixForm[ #]&)]},
+          {\({ket[qa], ket[source], bra[qa], bra[source]}\)}
+          },
+        GridBaseline->{Baseline, {1, 1}},
+        ColumnAlignments->{Left}],
+      ColumnForm[ {
+        MatrixForm[ {{3.5, 0, 0, 0.5}, {0, 1.5, 0.5, 0}, {0, 0.5, 1.5, 0}, {
+          0.5, 0, 0, 3.5}}], {
+        ket[ qa], 
+        ket[ source], 
+        bra[ qa], 
+        bra[ source]}}],
+      Editable->False]], "Output"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["  bellOperator // eigenvalues", "Input"],
+
+Cell[BoxData[
+    \({1, 2, 3, 4}\)], "Output"]
+}, Open  ]],
+
+Cell["\<\
+
+ The intermediate state which was created by Alice's Bell measurement
+ contains 4 different quantum states, one per measurement outcome.
+ The quantum states are deliberately _not_ normalized; rather, their
+ trace represents the probability of getting the corresponding result.
+ Here, all 4 outcomes are equally likely: \
+\>", "Text",
+  Evaluatable->False],
+
+Cell[CellGroupData[{
+
+Cell["  intermediate", "Input"],
+
+Cell[BoxData[
+    InterpretationBox[GridBox[{
+          {GridBox[{
+                {GridBox[{
+                      {
+                        TagBox[
+                          RowBox[{"(", GridBox[{
+                                {"0", "0", "0", "0", "0", "0", "0", "0"},
+                                {"0", "0", "0", "0", "0", "0", "0", "0"},
+                                {"0", "0", \(0.125`\ a11\), \(0.125`\ a12\), 
+                                  \(\(-0.125`\)\ a11\), \(\(-0.125`\)\ a12\), 
+                                  "0", "0"},
+                                {"0", "0", \(0.125`\ a21\), \(0.125`\ a22\), 
+                                  \(\(-0.125`\)\ a21\), \(\(-0.125`\)\ a22\), 
+                                  "0", "0"},
+                                {"0", "0", \(\(-0.125`\)\ a11\), 
+                                  \(\(-0.125`\)\ a12\), \(0.125`\ a11\), 
+                                  \(0.125`\ a12\), "0", "0"},
+                                {"0", "0", \(\(-0.125`\)\ a21\), 
+                                  \(\(-0.125`\)\ a22\), \(0.125`\ a21\), 
+                                  \(0.125`\ a22\), "0", "0"},
+                                {"0", "0", "0", "0", "0", "0", "0", "0"},
+                                {"0", "0", "0", "0", "0", "0", "0", "0"}
+                                }], ")"}],
+                          (MatrixForm[ #]&)]},
+                      {
+                        \({ket[qa], ket[source], ket[qb], bra[qa], 
+                          bra[source], bra[qb]}\)}
+                      },
+                    GridBaseline->{Baseline, {1, 1}},
+                    ColumnAlignments->{Left}]},
+                {\({pbell \[Rule] 1}\)},
+                {"\<\"p=0.25\"\>"},
+                {"\<\"============\"\>"}
+                },
+              GridBaseline->{Baseline, {1, 1}},
+              ColumnAlignments->{Left}]},
+          {GridBox[{
+                {GridBox[{
+                      {
+                        TagBox[
+                          RowBox[{"(", GridBox[{
+                                {"0", "0", "0", "0", "0", "0", "0", "0"},
+                                {"0", "0", "0", "0", "0", "0", "0", "0"},
+                                {"0", "0", \(0.125`\ a11\), 
+                                  \(\(-0.125`\)\ a12\), \(0.125`\ a11\), 
+                                  \(\(-0.125`\)\ a12\), "0", "0"},
+                                {"0", "0", \(\(-0.125`\)\ a21\), 
+                                  \(0.125`\ a22\), \(\(-0.125`\)\ a21\), 
+                                  \(0.125`\ a22\), "0", "0"},
+                                {"0", "0", \(0.125`\ a11\), 
+                                  \(\(-0.125`\)\ a12\), \(0.125`\ a11\), 
+                                  \(\(-0.125`\)\ a12\), "0", "0"},
+                                {"0", "0", \(\(-0.125`\)\ a21\), 
+                                  \(0.125`\ a22\), \(\(-0.125`\)\ a21\), 
+                                  \(0.125`\ a22\), "0", "0"},
+                                {"0", "0", "0", "0", "0", "0", "0", "0"},
+                                {"0", "0", "0", "0", "0", "0", "0", "0"}
+                                }], ")"}],
+                          (MatrixForm[ #]&)]},
+                      {
+                        \({ket[qa], ket[source], ket[qb], bra[qa], 
+                          bra[source], bra[qb]}\)}
+                      },
+                    GridBaseline->{Baseline, {1, 1}},
+                    ColumnAlignments->{Left}]},
+                {\({pbell \[Rule] 2}\)},
+                {"\<\"p=0.25\"\>"},
+                {"\<\"============\"\>"}
+                },
+              GridBaseline->{Baseline, {1, 1}},
+              ColumnAlignments->{Left}]},
+          {GridBox[{
+                {GridBox[{
+                      {
+                        TagBox[
+                          RowBox[{"(", GridBox[{
+                                {\(0.125`\ a22\), \(0.125`\ a21\), "0", "0", 
+                                  "0", "0", \(\(-0.125`\)\ a22\), 
+                                  \(\(-0.125`\)\ a21\)},
+                                {\(0.125`\ a12\), \(0.125`\ a11\), "0", "0", 
+                                  "0", "0", \(\(-0.125`\)\ a12\), 
+                                  \(\(-0.125`\)\ a11\)},
+                                {"0", "0", "0", "0", "0", "0", "0", "0"},
+                                {"0", "0", "0", "0", "0", "0", "0", "0"},
+                                {"0", "0", "0", "0", "0", "0", "0", "0"},
+                                {"0", "0", "0", "0", "0", "0", "0", "0"},
+                                {\(\(-0.125`\)\ a22\), \(\(-0.125`\)\ a21\), 
+                                  "0", "0", "0", "0", \(0.125`\ a22\), 
+                                  \(0.125`\ a21\)},
+                                {\(\(-0.125`\)\ a12\), \(\(-0.125`\)\ a11\), 
+                                  "0", "0", "0", "0", \(0.125`\ a12\), 
+                                  \(0.125`\ a11\)}
+                                }], ")"}],
+                          (MatrixForm[ #]&)]},
+                      {
+                        \({ket[qa], ket[source], ket[qb], bra[qa], 
+                          bra[source], bra[qb]}\)}
+                      },
+                    GridBaseline->{Baseline, {1, 1}},
+                    ColumnAlignments->{Left}]},
+                {\({pbell \[Rule] 3}\)},
+                {"\<\"p=0.25\"\>"},
+                {"\<\"============\"\>"}
+                },
+              GridBaseline->{Baseline, {1, 1}},
+              ColumnAlignments->{Left}]},
+          {GridBox[{
+                {GridBox[{
+                      {
+                        TagBox[
+                          RowBox[{"(", GridBox[{
+                                {\(0.125`\ a22\), \(\(-0.125`\)\ a21\), "0", 
+                                  "0", "0", "0", \(0.125`\ a22\), 
+                                  \(\(-0.125`\)\ a21\)},
+                                {\(\(-0.125`\)\ a12\), \(0.125`\ a11\), "0", 
+                                  "0", "0", "0", \(\(-0.125`\)\ a12\), 
+                                  \(0.125`\ a11\)},
+                                {"0", "0", "0", "0", "0", "0", "0", "0"},
+                                {"0", "0", "0", "0", "0", "0", "0", "0"},
+                                {"0", "0", "0", "0", "0", "0", "0", "0"},
+                                {"0", "0", "0", "0", "0", "0", "0", "0"},
+                                {\(0.125`\ a22\), \(\(-0.125`\)\ a21\), "0", 
+                                  "0", "0", "0", \(0.125`\ a22\), 
+                                  \(\(-0.125`\)\ a21\)},
+                                {\(\(-0.125`\)\ a12\), \(0.125`\ a11\), "0", 
+                                  "0", "0", "0", \(\(-0.125`\)\ a12\), 
+                                  \(0.125`\ a11\)}
+                                }], ")"}],
+                          (MatrixForm[ #]&)]},
+                      {\({ket[qa], ket[source], ket[qb], bra[qa], 
+                          bra[source], bra[qb]}\)}
+                      },
+                    GridBaseline->{Baseline, {1, 1}},
+                    ColumnAlignments->{Left}]},
+                {\({pbell \[Rule] 4}\)},
+                {"\<\"p=0.25\"\>"},
+                {"\<\"============\"\>"}
+                },
+              GridBaseline->{Baseline, {1, 1}},
+              ColumnAlignments->{Left}]}
+          },
+        GridBaseline->{Baseline, {1, 1}},
+        ColumnAlignments->{Left}],
+      ColumnForm[ {
+        ColumnForm[ {
+          ColumnForm[ {
+            
+            MatrixForm[ {{0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0}, {
+              0, 0, 
+              Times[ 0.125, a11], 
+              Times[ 0.125, a12], 
+              Times[ -0.125, a11], 
+              Times[ -0.125, a12], 0, 0}, {0, 0, 
+              Times[ 0.125, a21], 
+              Times[ 0.125, a22], 
+              Times[ -0.125, a21], 
+              Times[ -0.125, a22], 0, 0}, {0, 0, 
+              Times[ -0.125, a11], 
+              Times[ -0.125, a12], 
+              Times[ 0.125, a11], 
+              Times[ 0.125, a12], 0, 0}, {0, 0, 
+              Times[ -0.125, a21], 
+              Times[ -0.125, a22], 
+              Times[ 0.125, a21], 
+              Times[ 0.125, a22], 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 
+              0, 0, 0, 0, 0}}], {
+            ket[ qa], 
+            ket[ source], 
+            ket[ qb], 
+            bra[ qa], 
+            bra[ source], 
+            bra[ qb]}}], {pbell -> 1}, "p=0.25", "============"}], 
+        ColumnForm[ {
+          ColumnForm[ {
+            
+            MatrixForm[ {{0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0}, {
+              0, 0, 
+              Times[ 0.125, a11], 
+              Times[ -0.125, a12], 
+              Times[ 0.125, a11], 
+              Times[ -0.125, a12], 0, 0}, {0, 0, 
+              Times[ -0.125, a21], 
+              Times[ 0.125, a22], 
+              Times[ -0.125, a21], 
+              Times[ 0.125, a22], 0, 0}, {0, 0, 
+              Times[ 0.125, a11], 
+              Times[ -0.125, a12], 
+              Times[ 0.125, a11], 
+              Times[ -0.125, a12], 0, 0}, {0, 0, 
+              Times[ -0.125, a21], 
+              Times[ 0.125, a22], 
+              Times[ -0.125, a21], 
+              Times[ 0.125, a22], 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 
+              0, 0, 0, 0, 0}}], {
+            ket[ qa], 
+            ket[ source], 
+            ket[ qb], 
+            bra[ qa], 
+            bra[ source], 
+            bra[ qb]}}], {pbell -> 2}, "p=0.25", "============"}], 
+        ColumnForm[ {
+          ColumnForm[ {
+            MatrixForm[ {{
+              Times[ 0.125, a22], 
+              Times[ 0.125, a21], 0, 0, 0, 0, 
+              Times[ -0.125, a22], 
+              Times[ -0.125, a21]}, {
+              Times[ 0.125, a12], 
+              Times[ 0.125, a11], 0, 0, 0, 0, 
+              Times[ -0.125, a12], 
+              Times[ -0.125, a11]}, {0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 
+              0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0}, {
+              Times[ -0.125, a22], 
+              Times[ -0.125, a21], 0, 0, 0, 0, 
+              Times[ 0.125, a22], 
+              Times[ 0.125, a21]}, {
+              Times[ -0.125, a12], 
+              Times[ -0.125, a11], 0, 0, 0, 0, 
+              Times[ 0.125, a12], 
+              Times[ 0.125, a11]}}], {
+            ket[ qa], 
+            ket[ source], 
+            ket[ qb], 
+            bra[ qa], 
+            bra[ source], 
+            bra[ qb]}}], {pbell -> 3}, "p=0.25", "============"}], 
+        ColumnForm[ {
+          ColumnForm[ {
+            MatrixForm[ {{
+              Times[ 0.125, a22], 
+              Times[ -0.125, a21], 0, 0, 0, 0, 
+              Times[ 0.125, a22], 
+              Times[ -0.125, a21]}, {
+              Times[ -0.125, a12], 
+              Times[ 0.125, a11], 0, 0, 0, 0, 
+              Times[ -0.125, a12], 
+              Times[ 0.125, a11]}, {0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 
+              0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0}, {
+              Times[ 0.125, a22], 
+              Times[ -0.125, a21], 0, 0, 0, 0, 
+              Times[ 0.125, a22], 
+              Times[ -0.125, a21]}, {
+              Times[ -0.125, a12], 
+              Times[ 0.125, a11], 0, 0, 0, 0, 
+              Times[ -0.125, a12], 
+              Times[ 0.125, a11]}}], {
+            ket[ qa], 
+            ket[ source], 
+            ket[ qb], 
+            bra[ qa], 
+            bra[ source], 
+            bra[ qb]}}], {pbell -> 4}, "p=0.25", "============"}]}],
+      Editable->False]], "Output"]
+}, Open  ]],
+
+Cell["\<\
+
+ If we just look at what Bob holds in this intermediate state,
+ it becomes clear that the teleportation is already almost complete
+ up to some simple transformation which depends on the outcome of
+ the Bell measurement: \
+\>", "Text",
+  Evaluatable->False],
+
+Cell[CellGroupData[{
+
+Cell["  intermediate ~contract~ Not[bob]", "Input"],
+
+Cell[BoxData[
+    InterpretationBox[GridBox[{
+          {GridBox[{
+                {GridBox[{
+                      {
+                        TagBox[
+                          RowBox[{"(", GridBox[{
+                                {\(0.25`\ a11\), \(0.25`\ a12\)},
+                                {\(0.25`\ a21\), \(0.25`\ a22\)}
+                                }], ")"}],
+                          (MatrixForm[ #]&)]},
+                      {\({ket[qb], bra[qb]}\)}
+                      },
+                    GridBaseline->{Baseline, {1, 1}},
+                    ColumnAlignments->{Left}]},
+                {\({pbell \[Rule] 1}\)},
+                {"\<\"p=0.25\"\>"},
+                {"\<\"============\"\>"}
+                },
+              GridBaseline->{Baseline, {1, 1}},
+              ColumnAlignments->{Left}]},
+          {GridBox[{
+                {GridBox[{
+                      {
+                        TagBox[
+                          RowBox[{"(", GridBox[{
+                                {\(0.25`\ a11\), \(\(-0.25`\)\ a12\)},
+                                {\(\(-0.25`\)\ a21\), \(0.25`\ a22\)}
+                                }], ")"}],
+                          (MatrixForm[ #]&)]},
+                      {\({ket[qb], bra[qb]}\)}
+                      },
+                    GridBaseline->{Baseline, {1, 1}},
+                    ColumnAlignments->{Left}]},
+                {\({pbell \[Rule] 2}\)},
+                {"\<\"p=0.25\"\>"},
+                {"\<\"============\"\>"}
+                },
+              GridBaseline->{Baseline, {1, 1}},
+              ColumnAlignments->{Left}]},
+          {GridBox[{
+                {GridBox[{
+                      {
+                        TagBox[
+                          RowBox[{"(", GridBox[{
+                                {\(0.25`\ a22\), \(0.25`\ a21\)},
+                                {\(0.25`\ a12\), \(0.25`\ a11\)}
+                                }], ")"}],
+                          (MatrixForm[ #]&)]},
+                      {\({ket[qb], bra[qb]}\)}
+                      },
+                    GridBaseline->{Baseline, {1, 1}},
+                    ColumnAlignments->{Left}]},
+                {\({pbell \[Rule] 3}\)},
+                {"\<\"p=0.25\"\>"},
+                {"\<\"============\"\>"}
+                },
+              GridBaseline->{Baseline, {1, 1}},
+              ColumnAlignments->{Left}]},
+          {GridBox[{
+                {GridBox[{
+                      {
+                        TagBox[
+                          RowBox[{"(", GridBox[{
+                                {\(0.25`\ a22\), \(\(-0.25`\)\ a21\)},
+                                {\(\(-0.25`\)\ a12\), \(0.25`\ a11\)}
+                                }], ")"}],
+                          (MatrixForm[ #]&)]},
+                      {\({ket[qb], bra[qb]}\)}
+                      },
+                    GridBaseline->{Baseline, {1, 1}},
+                    ColumnAlignments->{Left}]},
+                {\({pbell \[Rule] 4}\)},
+                {"\<\"p=0.25\"\>"},
+                {"\<\"============\"\>"}
+                },
+              GridBaseline->{Baseline, {1, 1}},
+              ColumnAlignments->{Left}]}
+          },
+        GridBaseline->{Baseline, {1, 1}},
+        ColumnAlignments->{Left}],
+      ColumnForm[ {
+        ColumnForm[ {
+          ColumnForm[ {
+            MatrixForm[ {{
+              Times[ 0.25, a11], 
+              Times[ 0.25, a12]}, {
+              Times[ 0.25, a21], 
+              Times[ 0.25, a22]}}], {
+            ket[ qb], 
+            bra[ qb]}}], {pbell -> 1}, "p=0.25", "============"}], 
+        ColumnForm[ {
+          ColumnForm[ {
+            MatrixForm[ {{
+              Times[ 0.25, a11], 
+              Times[ -0.25, a12]}, {
+              Times[ -0.25, a21], 
+              Times[ 0.25, a22]}}], {
+            ket[ qb], 
+            bra[ qb]}}], {pbell -> 2}, "p=0.25", "============"}], 
+        ColumnForm[ {
+          ColumnForm[ {
+            MatrixForm[ {{
+              Times[ 0.25, a22], 
+              Times[ 0.25, a21]}, {
+              Times[ 0.25, a12], 
+              Times[ 0.25, a11]}}], {
+            ket[ qb], 
+            bra[ qb]}}], {pbell -> 3}, "p=0.25", "============"}], 
+        ColumnForm[ {
+          ColumnForm[ {
+            MatrixForm[ {{
+              Times[ 0.25, a22], 
+              Times[ -0.25, a21]}, {
+              Times[ -0.25, a12], 
+              Times[ 0.25, a11]}}], {
+            ket[ qb], 
+            bra[ qb]}}], {pbell -> 4}, "p=0.25", "============"}]}],
+      Editable->False]], "Output"]
+}, Open  ]],
+
+Cell["\<\
+
+ Knowing the result of the Bell measurement is crucial;
+ if we forget it, Bob is left with a perfect mixture: \
+\>", "Text",
+  Evaluatable->False],
+
+Cell[CellGroupData[{
+
+Cell["  intermediate ~contract~ Not[bob] ~forget~ pbell", "Input"],
+
+Cell[BoxData[
+    InterpretationBox[GridBox[{
+          {GridBox[{
+                {GridBox[{
+                      {
+                        TagBox[
+                          RowBox[{"(", GridBox[{
+                                {"0.5`", "0"},
+                                {"0", "0.5`"}
+                                }], ")"}],
+                          (MatrixForm[ #]&)]},
+                      {\({ket[qb], bra[qb]}\)}
+                      },
+                    GridBaseline->{Baseline, {1, 1}},
+                    ColumnAlignments->{Left}]},
+                {\({}\)},
+                {"\<\"p=1.\"\>"},
+                {"\<\"============\"\>"}
+                },
+              GridBaseline->{Baseline, {1, 1}},
+              ColumnAlignments->{Left}]}
+          },
+        GridBaseline->{Baseline, {1, 1}},
+        ColumnAlignments->{Left}],
+      ColumnForm[ {
+        ColumnForm[ {
+          ColumnForm[ {
+            MatrixForm[ {{0.5, 0}, {0, 0.5}}], {
+            ket[ qb], 
+            bra[ qb]}}], {}, "p=1.", "============"}]}],
+      Editable->False]], "Output"]
+}, Open  ]],
+
+Cell["\<\
+
+ The result of the measurement is crucial for factorization
+ of Bob's qubit: \
+\>", "Text",
+  Evaluatable->False],
+
+Cell[CellGroupData[{
+
+Cell["  intermediate ~factorizes~ qb", "Input"],
+
+Cell[BoxData[
+    \({{{pbell \[Rule] 1}, True}, {{pbell \[Rule] 2}, 
+        True}, {{pbell \[Rule] 3}, True}, {{pbell \[Rule] 4}, True}}\)], 
+  "Output"]
+}, Open  ]],
+
+Cell["\<\
+
+ Without the knowledge, we get a lengthy expression but it
+ is easy to verify that it cannot be fulfilled: \
+\>", "Text",
+  Evaluatable->False],
+
+Cell[CellGroupData[{
+
+Cell["\<\
+  intermediate ~forget~ pbell ~factorizes~ qb // FullSimplify\
+\>", 
+  "Input"],
+
+Cell[BoxData[
+    \({{{}, 
+        \(-\(1\/8\)\) + a22\/4 == 0 && \(-\(1\/8\)\) + a11\/4 == 0 && 
+          \(-\(1\/8\)\) + a11\/4 == 0 && \(-\(1\/8\)\) + a22\/4 == 0 && 
+          \(-\(a21\/4\)\) == 0 && \(-\(a12\/4\)\) == 0 && 
+          \(-\(a12\/4\)\) == 0 && \(-\(a21\/4\)\) == 0 && 
+          \(-\(a12\/4\)\) == 0 && \(-\(a21\/4\)\) == 0 && 
+          \(-\(a21\/4\)\) == 0 && \(-\(a12\/4\)\) == 0 && 
+          \(-\(1\/8\)\) + a11\/4 == 0 && \(-\(1\/8\)\) + a22\/4 == 0 && 
+          \(-\(1\/8\)\) + a22\/4 == 0 && \(-\(1\/8\)\) + a11\/4 == 0}}\)], 
+  "Output"]
+}, Open  ]],
+
+Cell["\<\
+
+ The full final state looks like this: \
+\>", "Text",
+  Evaluatable->False],
+
+Cell[CellGroupData[{
+
+Cell["  final", "Input"],
+
+Cell[BoxData[
+    InterpretationBox[GridBox[{
+          {GridBox[{
+                {GridBox[{
+                      {
+                        TagBox[
+                          RowBox[{"(", GridBox[{
+                                {"0", "0", "0", "0", "0", "0", "0", "0"},
+                                {"0", \(0.125`\ a11\), \(\(-0.125`\)\ a11\), 
+                                  "0", "0", \(0.125`\ a12\), 
+                                  \(\(-0.125`\)\ a12\), "0"},
+                                {"0", \(\(-0.125`\)\ a11\), \(0.125`\ a11\), 
+                                  "0", "0", \(\(-0.125`\)\ a12\), 
+                                  \(0.125`\ a12\), "0"},
+                                {"0", "0", "0", "0", "0", "0", "0", "0"},
+                                {"0", "0", "0", "0", "0", "0", "0", "0"},
+                                {"0", \(0.125`\ a21\), \(\(-0.125`\)\ a21\), 
+                                  "0", "0", \(0.125`\ a22\), 
+                                  \(\(-0.125`\)\ a22\), "0"},
+                                {"0", \(\(-0.125`\)\ a21\), \(0.125`\ a21\), 
+                                  "0", "0", \(\(-0.125`\)\ a22\), 
+                                  \(0.125`\ a22\), "0"},
+                                {"0", "0", "0", "0", "0", "0", "0", "0"}
+                                }], ")"}],
+                          (MatrixForm[ #]&)]},
+                      {
+                        \({ket[qb], ket[qa], ket[source], bra[qb], bra[qa], 
+                          bra[source]}\)}
+                      },
+                    GridBaseline->{Baseline, {1, 1}},
+                    ColumnAlignments->{Left}]},
+                {\({pbell \[Rule] 1}\)},
+                {"\<\"p=0.25\"\>"},
+                {"\<\"============\"\>"}
+                },
+              GridBaseline->{Baseline, {1, 1}},
+              ColumnAlignments->{Left}]},
+          {GridBox[{
+                {GridBox[{
+                      {
+                        TagBox[
+                          RowBox[{"(", GridBox[{
+                                {"0", "0", "0", "0", "0", "0", "0", "0"},
+                                {"0", \(0.125`\ a11\), \(0.125`\ a11\), "0", 
+                                  "0", \(0.125`\ a12\), \(0.125`\ a12\), 
+                                  "0"},
+                                {"0", \(0.125`\ a11\), \(0.125`\ a11\), "0", 
+                                  "0", \(0.125`\ a12\), \(0.125`\ a12\), 
+                                  "0"},
+                                {"0", "0", "0", "0", "0", "0", "0", "0"},
+                                {"0", "0", "0", "0", "0", "0", "0", "0"},
+                                {"0", \(0.125`\ a21\), \(0.125`\ a21\), "0", 
+                                  "0", \(0.125`\ a22\), \(0.125`\ a22\), 
+                                  "0"},
+                                {"0", \(0.125`\ a21\), \(0.125`\ a21\), "0", 
+                                  "0", \(0.125`\ a22\), \(0.125`\ a22\), 
+                                  "0"},
+                                {"0", "0", "0", "0", "0", "0", "0", "0"}
+                                }], ")"}],
+                          (MatrixForm[ #]&)]},
+                      {
+                        \({ket[qb], ket[qa], ket[source], bra[qb], bra[qa], 
+                          bra[source]}\)}
+                      },
+                    GridBaseline->{Baseline, {1, 1}},
+                    ColumnAlignments->{Left}]},
+                {\({pbell \[Rule] 2}\)},
+                {"\<\"p=0.25\"\>"},
+                {"\<\"============\"\>"}
+                },
+              GridBaseline->{Baseline, {1, 1}},
+              ColumnAlignments->{Left}]},
+          {GridBox[{
+                {GridBox[{
+                      {
+                        TagBox[
+                          RowBox[{"(", GridBox[{
+                                {\(0.125`\ a11\), "0", "0", 
+                                  \(\(-0.125`\)\ a11\), \(0.125`\ a12\), "0", 
+                                  "0", \(\(-0.125`\)\ a12\)},
+                                {"0", "0", "0", "0", "0", "0", "0", "0"},
+                                {"0", "0", "0", "0", "0", "0", "0", "0"},
+                                {\(\(-0.125`\)\ a11\), "0", "0", 
+                                  \(0.125`\ a11\), \(\(-0.125`\)\ a12\), "0", 
+                                  "0", \(0.125`\ a12\)},
+                                {\(0.125`\ a21\), "0", "0", 
+                                  \(\(-0.125`\)\ a21\), \(0.125`\ a22\), "0", 
+                                  "0", \(\(-0.125`\)\ a22\)},
+                                {"0", "0", "0", "0", "0", "0", "0", "0"},
+                                {"0", "0", "0", "0", "0", "0", "0", "0"},
+                                {\(\(-0.125`\)\ a21\), "0", "0", 
+                                  \(0.125`\ a21\), \(\(-0.125`\)\ a22\), "0", 
+                                  "0", \(0.125`\ a22\)}
+                                }], ")"}],
+                          (MatrixForm[ #]&)]},
+                      {
+                        \({ket[qb], ket[qa], ket[source], bra[qb], bra[qa], 
+                          bra[source]}\)}
+                      },
+                    GridBaseline->{Baseline, {1, 1}},
+                    ColumnAlignments->{Left}]},
+                {\({pbell \[Rule] 3}\)},
+                {"\<\"p=0.25\"\>"},
+                {"\<\"============\"\>"}
+                },
+              GridBaseline->{Baseline, {1, 1}},
+              ColumnAlignments->{Left}]},
+          {GridBox[{
+                {GridBox[{
+                      {
+                        TagBox[
+                          RowBox[{"(", GridBox[{
+                                {\(0.125`\ a11\), "0", "0", \(0.125`\ a11\), 
+                                  \(0.125`\ a12\), "0", "0", 
+                                  \(0.125`\ a12\)},
+                                {"0", "0", "0", "0", "0", "0", "0", "0"},
+                                {"0", "0", "0", "0", "0", "0", "0", "0"},
+                                {\(0.125`\ a11\), "0", "0", \(0.125`\ a11\), 
+                                  \(0.125`\ a12\), "0", "0", 
+                                  \(0.125`\ a12\)},
+                                {\(0.125`\ a21\), "0", "0", \(0.125`\ a21\), 
+                                  \(0.125`\ a22\), "0", "0", 
+                                  \(0.125`\ a22\)},
+                                {"0", "0", "0", "0", "0", "0", "0", "0"},
+                                {"0", "0", "0", "0", "0", "0", "0", "0"},
+                                {\(0.125`\ a21\), "0", "0", \(0.125`\ a21\), 
+                                  \(0.125`\ a22\), "0", "0", \(0.125`\ a22\)}
+                                }], ")"}],
+                          (MatrixForm[ #]&)]},
+                      {
+                        \({ket[qb], ket[qa], ket[source], bra[qb], bra[qa], 
+                          bra[source]}\)}
+                      },
+                    GridBaseline->{Baseline, {1, 1}},
+                    ColumnAlignments->{Left}]},
+                {\({pbell \[Rule] 4}\)},
+                {"\<\"p=0.25\"\>"},
+                {"\<\"============\"\>"}
+                },
+              GridBaseline->{Baseline, {1, 1}},
+              ColumnAlignments->{Left}]}
+          },
+        GridBaseline->{Baseline, {1, 1}},
+        ColumnAlignments->{Left}],
+      ColumnForm[ {
+        ColumnForm[ {
+          ColumnForm[ {
+            MatrixForm[ {{0, 0, 0, 0, 0, 0, 0, 0}, {0, 
+              Times[ 0.125, a11], 
+              Times[ -0.125, a11], 0, 0, 
+              Times[ 0.125, a12], 
+              Times[ -0.125, a12], 0}, {0, 
+              Times[ -0.125, a11], 
+              Times[ 0.125, a11], 0, 0, 
+              Times[ -0.125, a12], 
+              Times[ 0.125, a12], 0}, {0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 
+              0, 0, 0, 0}, {0, 
+              Times[ 0.125, a21], 
+              Times[ -0.125, a21], 0, 0, 
+              Times[ 0.125, a22], 
+              Times[ -0.125, a22], 0}, {0, 
+              Times[ -0.125, a21], 
+              Times[ 0.125, a21], 0, 0, 
+              Times[ -0.125, a22], 
+              Times[ 0.125, a22], 0}, {0, 0, 0, 0, 0, 0, 0, 0}}], {
+            ket[ qb], 
+            ket[ qa], 
+            ket[ source], 
+            bra[ qb], 
+            bra[ qa], 
+            bra[ source]}}], {pbell -> 1}, "p=0.25", "============"}], 
+        ColumnForm[ {
+          ColumnForm[ {
+            MatrixForm[ {{0, 0, 0, 0, 0, 0, 0, 0}, {0, 
+              Times[ 0.125, a11], 
+              Times[ 0.125, a11], 0, 0, 
+              Times[ 0.125, a12], 
+              Times[ 0.125, a12], 0}, {0, 
+              Times[ 0.125, a11], 
+              Times[ 0.125, a11], 0, 0, 
+              Times[ 0.125, a12], 
+              Times[ 0.125, a12], 0}, {0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 
+              0, 0, 0, 0}, {0, 
+              Times[ 0.125, a21], 
+              Times[ 0.125, a21], 0, 0, 
+              Times[ 0.125, a22], 
+              Times[ 0.125, a22], 0}, {0, 
+              Times[ 0.125, a21], 
+              Times[ 0.125, a21], 0, 0, 
+              Times[ 0.125, a22], 
+              Times[ 0.125, a22], 0}, {0, 0, 0, 0, 0, 0, 0, 0}}], {
+            ket[ qb], 
+            ket[ qa], 
+            ket[ source], 
+            bra[ qb], 
+            bra[ qa], 
+            bra[ source]}}], {pbell -> 2}, "p=0.25", "============"}], 
+        ColumnForm[ {
+          ColumnForm[ {
+            MatrixForm[ {{
+              Times[ 0.125, a11], 0, 0, 
+              Times[ -0.125, a11], 
+              Times[ 0.125, a12], 0, 0, 
+              Times[ -0.125, a12]}, {0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 
+              0, 0, 0}, {
+              Times[ -0.125, a11], 0, 0, 
+              Times[ 0.125, a11], 
+              Times[ -0.125, a12], 0, 0, 
+              Times[ 0.125, a12]}, {
+              Times[ 0.125, a21], 0, 0, 
+              Times[ -0.125, a21], 
+              Times[ 0.125, a22], 0, 0, 
+              Times[ -0.125, a22]}, {0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 
+              0, 0, 0}, {
+              Times[ -0.125, a21], 0, 0, 
+              Times[ 0.125, a21], 
+              Times[ -0.125, a22], 0, 0, 
+              Times[ 0.125, a22]}}], {
+            ket[ qb], 
+            ket[ qa], 
+            ket[ source], 
+            bra[ qb], 
+            bra[ qa], 
+            bra[ source]}}], {pbell -> 3}, "p=0.25", "============"}], 
+        ColumnForm[ {
+          ColumnForm[ {
+            MatrixForm[ {{
+              Times[ 0.125, a11], 0, 0, 
+              Times[ 0.125, a11], 
+              Times[ 0.125, a12], 0, 0, 
+              Times[ 0.125, a12]}, {0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 
+              0, 0, 0}, {
+              Times[ 0.125, a11], 0, 0, 
+              Times[ 0.125, a11], 
+              Times[ 0.125, a12], 0, 0, 
+              Times[ 0.125, a12]}, {
+              Times[ 0.125, a21], 0, 0, 
+              Times[ 0.125, a21], 
+              Times[ 0.125, a22], 0, 0, 
+              Times[ 0.125, a22]}, {0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 
+              0, 0, 0}, {
+              Times[ 0.125, a21], 0, 0, 
+              Times[ 0.125, a21], 
+              Times[ 0.125, a22], 0, 0, 
+              Times[ 0.125, a22]}}], {
+            ket[ qb], 
+            ket[ qa], 
+            ket[ source], 
+            bra[ qb], 
+            bra[ qa], 
+            bra[ source]}}], {pbell -> 4}, "p=0.25", "============"}]}],
+      Editable->False]], "Output"]
+}, Open  ]],
+
+Cell["\<\
+
+ Bob's quantum state is now already the correct one, independent
+ of the outcome of the Bell measurement: \
+\>", "Text",
+  Evaluatable->False],
+
+Cell[CellGroupData[{
+
+Cell["  final ~contract~ Not[bob]", "Input"],
+
+Cell[BoxData[
+    InterpretationBox[GridBox[{
+          {GridBox[{
+                {GridBox[{
+                      {
+                        TagBox[
+                          RowBox[{"(", GridBox[{
+                                {\(0.25`\ a11\), \(0.25`\ a12\)},
+                                {\(0.25`\ a21\), \(0.25`\ a22\)}
+                                }], ")"}],
+                          (MatrixForm[ #]&)]},
+                      {\({ket[qb], bra[qb]}\)}
+                      },
+                    GridBaseline->{Baseline, {1, 1}},
+                    ColumnAlignments->{Left}]},
+                {\({pbell \[Rule] 1}\)},
+                {"\<\"p=0.25\"\>"},
+                {"\<\"============\"\>"}
+                },
+              GridBaseline->{Baseline, {1, 1}},
+              ColumnAlignments->{Left}]},
+          {GridBox[{
+                {GridBox[{
+                      {
+                        TagBox[
+                          RowBox[{"(", GridBox[{
+                                {\(0.25`\ a11\), \(0.25`\ a12\)},
+                                {\(0.25`\ a21\), \(0.25`\ a22\)}
+                                }], ")"}],
+                          (MatrixForm[ #]&)]},
+                      {\({ket[qb], bra[qb]}\)}
+                      },
+                    GridBaseline->{Baseline, {1, 1}},
+                    ColumnAlignments->{Left}]},
+                {\({pbell \[Rule] 2}\)},
+                {"\<\"p=0.25\"\>"},
+                {"\<\"============\"\>"}
+                },
+              GridBaseline->{Baseline, {1, 1}},
+              ColumnAlignments->{Left}]},
+          {GridBox[{
+                {GridBox[{
+                      {
+                        TagBox[
+                          RowBox[{"(", GridBox[{
+                                {\(0.25`\ a11\), \(0.25`\ a12\)},
+                                {\(0.25`\ a21\), \(0.25`\ a22\)}
+                                }], ")"}],
+                          (MatrixForm[ #]&)]},
+                      {\({ket[qb], bra[qb]}\)}
+                      },
+                    GridBaseline->{Baseline, {1, 1}},
+                    ColumnAlignments->{Left}]},
+                {\({pbell \[Rule] 3}\)},
+                {"\<\"p=0.25\"\>"},
+                {"\<\"============\"\>"}
+                },
+              GridBaseline->{Baseline, {1, 1}},
+              ColumnAlignments->{Left}]},
+          {GridBox[{
+                {GridBox[{
+                      {
+                        TagBox[
+                          RowBox[{"(", GridBox[{
+                                {\(0.25`\ a11\), \(0.25`\ a12\)},
+                                {\(0.25`\ a21\), \(0.25`\ a22\)}
+                                }], ")"}],
+                          (MatrixForm[ #]&)]},
+                      {\({ket[qb], bra[qb]}\)}
+                      },
+                    GridBaseline->{Baseline, {1, 1}},
+                    ColumnAlignments->{Left}]},
+                {\({pbell \[Rule] 4}\)},
+                {"\<\"p=0.25\"\>"},
+                {"\<\"============\"\>"}
+                },
+              GridBaseline->{Baseline, {1, 1}},
+              ColumnAlignments->{Left}]}
+          },
+        GridBaseline->{Baseline, {1, 1}},
+        ColumnAlignments->{Left}],
+      ColumnForm[ {
+        ColumnForm[ {
+          ColumnForm[ {
+            MatrixForm[ {{
+              Times[ 0.25, a11], 
+              Times[ 0.25, a12]}, {
+              Times[ 0.25, a21], 
+              Times[ 0.25, a22]}}], {
+            ket[ qb], 
+            bra[ qb]}}], {pbell -> 1}, "p=0.25", "============"}], 
+        ColumnForm[ {
+          ColumnForm[ {
+            MatrixForm[ {{
+              Times[ 0.25, a11], 
+              Times[ 0.25, a12]}, {
+              Times[ 0.25, a21], 
+              Times[ 0.25, a22]}}], {
+            ket[ qb], 
+            bra[ qb]}}], {pbell -> 2}, "p=0.25", "============"}], 
+        ColumnForm[ {
+          ColumnForm[ {
+            MatrixForm[ {{
+              Times[ 0.25, a11], 
+              Times[ 0.25, a12]}, {
+              Times[ 0.25, a21], 
+              Times[ 0.25, a22]}}], {
+            ket[ qb], 
+            bra[ qb]}}], {pbell -> 3}, "p=0.25", "============"}], 
+        ColumnForm[ {
+          ColumnForm[ {
+            MatrixForm[ {{
+              Times[ 0.25, a11], 
+              Times[ 0.25, a12]}, {
+              Times[ 0.25, a21], 
+              Times[ 0.25, a22]}}], {
+            ket[ qb], 
+            bra[ qb]}}], {pbell -> 4}, "p=0.25", "============"}]}],
+      Editable->False]], "Output"]
+}, Open  ]],
+
+Cell["\<\
+
+ Alice OTOH still holds one of the four Bell states:
+ (here we have to force Mathematica to make use of the
+ fact that a11 + a22 == 1) \
+\>", "Text",
+  Evaluatable->False],
+
+Cell[CellGroupData[{
+
+Cell["  final ~contract~ Not[alice] //. (a11->1-a22)", "Input"],
+
+Cell[BoxData[
+    InterpretationBox[GridBox[{
+          {GridBox[{
+                {GridBox[{
+                      {
+                        TagBox[
+                          RowBox[{"(", GridBox[{
+                                {"0", "0", "0", "0"},
+                                {"0", "0.125`", \(-0.125`\), "0"},
+                                {"0", \(-0.125`\), "0.125`", "0"},
+                                {"0", "0", "0", "0"}
+                                }], ")"}],
+                          (MatrixForm[ #]&)]},
+                      {\({ket[qa], ket[source], bra[qa], bra[source]}\)}
+                      },
+                    GridBaseline->{Baseline, {1, 1}},
+                    ColumnAlignments->{Left}]},
+                {\({pbell \[Rule] 1}\)},
+                {"\<\"p=0.25\"\>"},
+                {"\<\"============\"\>"}
+                },
+              GridBaseline->{Baseline, {1, 1}},
+              ColumnAlignments->{Left}]},
+          {GridBox[{
+                {GridBox[{
+                      {
+                        TagBox[
+                          RowBox[{"(", GridBox[{
+                                {"0", "0", "0", "0"},
+                                {"0", "0.125`", "0.125`", "0"},
+                                {"0", "0.125`", "0.125`", "0"},
+                                {"0", "0", "0", "0"}
+                                }], ")"}],
+                          (MatrixForm[ #]&)]},
+                      {\({ket[qa], ket[source], bra[qa], bra[source]}\)}
+                      },
+                    GridBaseline->{Baseline, {1, 1}},
+                    ColumnAlignments->{Left}]},
+                {\({pbell \[Rule] 2}\)},
+                {"\<\"p=0.25\"\>"},
+                {"\<\"============\"\>"}
+                },
+              GridBaseline->{Baseline, {1, 1}},
+              ColumnAlignments->{Left}]},
+          {GridBox[{
+                {GridBox[{
+                      {
+                        TagBox[
+                          RowBox[{"(", GridBox[{
+                                {"0.125`", "0", "0", \(-0.125`\)},
+                                {"0", "0", "0", "0"},
+                                {"0", "0", "0", "0"},
+                                {\(-0.125`\), "0", "0", "0.125`"}
+                                }], ")"}],
+                          (MatrixForm[ #]&)]},
+                      {\({ket[qa], ket[source], bra[qa], bra[source]}\)}
+                      },
+                    GridBaseline->{Baseline, {1, 1}},
+                    ColumnAlignments->{Left}]},
+                {\({pbell \[Rule] 3}\)},
+                {"\<\"p=0.25\"\>"},
+                {"\<\"============\"\>"}
+                },
+              GridBaseline->{Baseline, {1, 1}},
+              ColumnAlignments->{Left}]},
+          {GridBox[{
+                {GridBox[{
+                      {
+                        TagBox[
+                          RowBox[{"(", GridBox[{
+                                {"0.125`", "0", "0", "0.125`"},
+                                {"0", "0", "0", "0"},
+                                {"0", "0", "0", "0"},
+                                {"0.125`", "0", "0", "0.125`"}
+                                }], ")"}],
+                          (MatrixForm[ #]&)]},
+                      {\({ket[qa], ket[source], bra[qa], bra[source]}\)}
+                      },
+                    GridBaseline->{Baseline, {1, 1}},
+                    ColumnAlignments->{Left}]},
+                {\({pbell \[Rule] 4}\)},
+                {"\<\"p=0.25\"\>"},
+                {"\<\"============\"\>"}
+                },
+              GridBaseline->{Baseline, {1, 1}},
+              ColumnAlignments->{Left}]}
+          },
+        GridBaseline->{Baseline, {1, 1}},
+        ColumnAlignments->{Left}],
+      ColumnForm[ {
+        ColumnForm[ {
+          ColumnForm[ {
+            
+            MatrixForm[ {{0, 0, 0, 0}, {0, 0.125, -0.125, 0}, {0, -0.125, 
+              0.125, 0}, {0, 0, 0, 0}}], {
+            ket[ qa], 
+            ket[ source], 
+            bra[ qa], 
+            bra[ source]}}], {pbell -> 1}, "p=0.25", "============"}], 
+        ColumnForm[ {
+          ColumnForm[ {
+            
+            MatrixForm[ {{0, 0, 0, 0}, {0, 0.125, 0.125, 0}, {0, 0.125, 
+              0.125, 0}, {0, 0, 0, 0}}], {
+            ket[ qa], 
+            ket[ source], 
+            bra[ qa], 
+            bra[ source]}}], {pbell -> 2}, "p=0.25", "============"}], 
+        ColumnForm[ {
+          ColumnForm[ {
+            
+            MatrixForm[ {{0.125, 0, 0, -0.125}, {0, 0, 0, 0}, {0, 0, 0, 
+              0}, {-0.125, 0, 0, 0.125}}], {
+            ket[ qa], 
+            ket[ source], 
+            bra[ qa], 
+            bra[ source]}}], {pbell -> 3}, "p=0.25", "============"}], 
+        ColumnForm[ {
+          ColumnForm[ {
+            
+            MatrixForm[ {{0.125, 0, 0, 0.125}, {0, 0, 0, 0}, {0, 0, 0, 0}, {
+              0.125, 0, 0, 0.125}}], {
+            ket[ qa], 
+            ket[ source], 
+            bra[ qa], 
+            bra[ source]}}], {pbell -> 4}, "p=0.25", "============"}]}],
+      Editable->False]], "Output"]
+}, Open  ]]
+},
+FrontEndVersion->"X 3.0",
+ScreenRectangle->{{0, 1280}, {0, 1024}},
+WindowSize->{766, 764},
+WindowMargins->{{Automatic, 98}, {53, Automatic}}
+]
+
+
+(***********************************************************************
+Cached data follows.  If you edit this Notebook file directly, not using
+Mathematica, you must remove the line containing CacheID at the top of 
+the file.  The cache data will then be recreated when you save this file 
+from within Mathematica.
+***********************************************************************)
+
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+
+(*NotebookFileOutline
+Notebook[{
+Cell[1709, 49, 273, 6, 52, "Text",
+  Evaluatable->False],
+Cell[1985, 57, 201, 9, 147, "Text",
+  Evaluatable->False],
+Cell[2189, 68, 58, 0, 42, "Input"],
+
+Cell[CellGroupData[{
+Cell[2272, 72, 31, 0, 42, "Input"],
+Cell[2306, 74, 251, 4, 82, "Print"]
+}, Open  ]],
+Cell[2572, 81, 82, 4, 52, "Text",
+  Evaluatable->False],
+Cell[2657, 87, 91, 4, 52, "Text",
+  Evaluatable->False],
+
+Cell[CellGroupData[{
+Cell[2773, 95, 41, 0, 42, "Input"],
+Cell[2817, 97, 46, 1, 42, "Output"]
+}, Open  ]],
+Cell[2878, 101, 78, 4, 52, "Text",
+  Evaluatable->False],
+
+Cell[CellGroupData[{
+Cell[2981, 109, 31, 0, 42, "Input"],
+Cell[3015, 111, 38, 1, 42, "Output"]
+}, Open  ]],
+Cell[3068, 115, 93, 4, 52, "Text",
+  Evaluatable->False],
+
+Cell[CellGroupData[{
+Cell[3186, 123, 46, 0, 42, "Input"],
+Cell[3235, 125, 54, 1, 42, "Output"]
+}, Open  ]],
+Cell[3304, 129, 117, 5, 52, "Text",
+  Evaluatable->False],
+
+Cell[CellGroupData[{
+Cell[3446, 138, 70, 0, 42, "Input"],
+Cell[3519, 140, 67, 1, 42, "Output"]
+}, Open  ]],
+Cell[3601, 144, 108, 4, 52, "Text",
+  Evaluatable->False],
+
+Cell[CellGroupData[{
+Cell[3734, 152, 47, 0, 42, "Input"],
+Cell[3784, 154, 743, 22, 120, "Output"]
+}, Open  ]],
+Cell[4542, 179, 165, 5, 71, "Text",
+  Evaluatable->False],
+
+Cell[CellGroupData[{
+Cell[4732, 188, 56, 0, 42, "Input"],
+Cell[4791, 190, 536, 17, 80, "Output"]
+}, Open  ]],
+Cell[5342, 210, 110, 4, 52, "Text",
+  Evaluatable->False],
+
+Cell[CellGroupData[{
+Cell[5477, 218, 46, 0, 42, "Input"],
+Cell[5526, 220, 2011, 50, 200, "Output"]
+}, Open  ]],
+Cell[7552, 273, 270, 7, 109, "Text",
+  Evaluatable->False],
+Cell[7825, 282, 111, 4, 76, "Input"],
+Cell[7939, 288, 102, 4, 52, "Text",
+  Evaluatable->False],
+
+Cell[CellGroupData[{
+Cell[8066, 296, 45, 0, 42, "Input"],
+Cell[8114, 298, 38, 1, 42, "Output"]
+}, Open  ]],
+Cell[8167, 302, 127, 5, 71, "Text",
+  Evaluatable->False],
+Cell[8297, 309, 76, 0, 42, "Input"],
+Cell[8376, 311, 172, 5, 71, "Text",
+  Evaluatable->False],
+Cell[8551, 318, 229, 7, 127, "Input"],
+Cell[8783, 327, 174, 5, 71, "Text",
+  Evaluatable->False],
+
+Cell[CellGroupData[{
+Cell[8982, 336, 147, 7, 127, "Input"],
+Cell[9132, 345, 4862, 122, 422, "Output"]
+}, Open  ]],
+Cell[14009, 470, 74, 4, 52, "Text",
+  Evaluatable->False],
+Cell[14086, 476, 51, 0, 42, "Input"],
+Cell[14140, 478, 222, 6, 90, "Text",
+  Evaluatable->False],
+
+Cell[CellGroupData[{
+Cell[14387, 488, 59, 0, 42, "Input"],
+Cell[14449, 490, 1090, 30, 140, "Output"]
+}, Open  ]],
+Cell[15554, 523, 120, 5, 52, "Text",
+  Evaluatable->False],
+Cell[15677, 530, 145, 5, 71, "Text",
+  Evaluatable->False],
+Cell[15825, 537, 96, 4, 52, "Text",
+  Evaluatable->False],
+
+Cell[CellGroupData[{
+Cell[15946, 545, 31, 0, 42, "Input"],
+Cell[15980, 547, 771, 22, 120, "Output"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+Cell[16788, 574, 46, 0, 42, "Input"],
+Cell[16837, 576, 46, 1, 42, "Output"]
+}, Open  ]],
+Cell[16898, 580, 366, 8, 128, "Text",
+  Evaluatable->False],
+
+Cell[CellGroupData[{
+Cell[17289, 592, 31, 0, 42, "Input"],
+Cell[17323, 594, 11629, 253, 980, "Output"]
+}, Open  ]],
+Cell[28967, 850, 267, 7, 109, "Text",
+  Evaluatable->False],
+
+Cell[CellGroupData[{
+Cell[29259, 861, 51, 0, 42, "Input"],
+Cell[29313, 863, 4538, 118, 500, "Output"]
+}, Open  ]],
+Cell[33866, 984, 157, 5, 71, "Text",
+  Evaluatable->False],
+
+Cell[CellGroupData[{
+Cell[34048, 993, 66, 0, 42, "Input"],
+Cell[34117, 995, 1084, 30, 140, "Output"]
+}, Open  ]],
+Cell[35216, 1028, 124, 5, 71, "Text",
+  Evaluatable->False],
+
+Cell[CellGroupData[{
+Cell[35365, 1037, 47, 0, 42, "Input"],
+Cell[35415, 1039, 154, 3, 42, "Output"]
+}, Open  ]],
+Cell[35584, 1045, 154, 5, 71, "Text",
+  Evaluatable->False],
+
+Cell[CellGroupData[{
+Cell[35763, 1054, 89, 3, 42, "Input"],
+Cell[35855, 1059, 567, 10, 168, "Output"]
+}, Open  ]],
+Cell[36437, 1072, 86, 4, 52, "Text",
+  Evaluatable->False],
+
+Cell[CellGroupData[{
+Cell[36548, 1080, 24, 0, 42, "Input"],
+Cell[36575, 1082, 11497, 251, 980, "Output"]
+}, Open  ]],
+Cell[48087, 1336, 153, 5, 71, "Text",
+  Evaluatable->False],
+
+Cell[CellGroupData[{
+Cell[48265, 1345, 44, 0, 42, "Input"],
+Cell[48312, 1347, 4514, 118, 500, "Output"]
+}, Open  ]],
+Cell[52841, 1468, 182, 6, 90, "Text",
+  Evaluatable->False],
+
+Cell[CellGroupData[{
+Cell[53048, 1478, 63, 0, 42, "Input"],
+Cell[53114, 1480, 5106, 126, 660, "Output"]
+}, Open  ]]
+}
+]
+*)
+
+
+
+
+(***********************************************************************
+End of Mathematica Notebook file.
+***********************************************************************)
+
